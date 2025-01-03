@@ -16,32 +16,55 @@ public class Ex2 {
     }
 
     public static boolean isForm(String text) {
-        if (text == null || !text.startsWith("=") || text.endsWith("=")) {
+        if (text == null || !text.startsWith("=")) {
             return false; // It must start with '='
         }
-        String formula = text.substring(1);
+
+        String formula = text.substring(1); // Remove the '=' at the start
+        boolean lastWasOperator = false; // Track if the last character was an operator
+
         for (int i = 0; i < formula.length(); i++) {
             char currentChar = formula.charAt(i);
+
+            // Check if the character is an operator
             if (isOperator(currentChar)) {
-                if (i == formula.length() - 1 || isOperator(formula.charAt(i + 1)) || isOperator(formula.charAt(0))) {
+                // Invalid if an operator is the first character or if two operators are adjacent
+                if (i == 0 || lastWasOperator) {
                     return false;
                 }
+                lastWasOperator = true; // Mark that the last character was an operator
+            } else {
+                lastWasOperator = false; // Mark that the last character was not an operator
             }
-            // Check if it's a cell reference (e.g., A1, B5)
+
+            // Check if it's a valid number or letter (for cell reference)
+            if (Character.isDigit(currentChar) || Character.isLetter(currentChar)) {
+                continue; // Valid number or letter, move on to the next character
+            }
+
+            // Check for cell reference (e.g., A1, B5, etc.)
             if (Character.isLetter(currentChar)) {
-                // Ensure the letter is followed by one or more digits
                 int j = i + 1;
+                // Ensure the letter is followed by one or more digits
                 while (j < formula.length() && Character.isDigit(formula.charAt(j))) {
                     j++;
                 }
-                if (j == i + 1 || j > i + 2) { // cell must have exactly one letter and at least one digit
+                if (j == i + 1) { // Cell must have a number after the letter
                     return false;
                 }
-                i = j - 1; // Skip the digits part for the next iteration
+                i = j - 1; // Skip over the digits of the cell reference
+                continue;
+            }
+
+            // Reject invalid characters like `%`, or unsupported characters
+            if (!isOperator(currentChar) && !Character.isDigit(currentChar) && !Character.isLetter(currentChar)) {
+                return false;
             }
         }
+
         return true;
     }
+
 
     public static boolean isOperator(char c) {
         return (c == '+' || c == '-' || c == '*' || c == '/');
@@ -52,10 +75,8 @@ public class Ex2 {
             throw new IllegalArgumentException("Invalid formula: " + text);
         }
 
-        // הסרת סימן "=" מהתחלה
         String formula = text.substring(1);
 
-        // חישוב הנוסחה
         return evaluateExpression(formula);
     }
 

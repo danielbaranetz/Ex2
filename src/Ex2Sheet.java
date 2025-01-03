@@ -3,7 +3,7 @@ import java.io.IOException;
 
 public class Ex2Sheet implements Sheet {
     private Cell[][] table;
-    // Add your code here
+            // Add your code here
 
     // ///////////////////
     public Ex2Sheet(int x, int y) {

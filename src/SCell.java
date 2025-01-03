@@ -32,15 +32,14 @@ public class SCell implements Cell {
         } else if (Ex2.isNumber(s)) {
             type = Ex2Utils.NUMBER;  // If it's a number, set type to NUMBER
         } else if (Ex2.isForm(s)) {
+            line = Ex2.computeForm(s).toString();
             // If it's a valid formula, set type to FORM
             type = Ex2Utils.FORM;
         } else {
-            // If it's not a valid formula, number, or text, it is treated as an invalid formula
+            line = Ex2Utils.ERR_FORM;
             type = Ex2Utils.ERR_FORM_FORMAT;  // Invalid formula format, so it gets the error type
         }
     }
-
-
 
 
     @Override
@@ -62,4 +61,4 @@ public class SCell implements Cell {
     public void setOrder(int t) {
         this.order = t;
     }
-    }
+}
