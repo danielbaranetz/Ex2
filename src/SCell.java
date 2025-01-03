@@ -1,26 +1,20 @@
-// Add your documentation below:
-
 public class SCell implements Cell {
-    private String line;
-    private int type;
-    private int order;
-    // Add your code here
+    private String line; // הנתון של התא
+    private int type;    // הסוג של התא
+    private int order;   // סדר החישוב של התא
 
     public SCell(String s) {
-        // Add your code here
-        setData(s);
+        setData(s); // אתחול הנתונים והסוג
     }
 
     @Override
     public int getOrder() {
         if (type == Ex2Utils.TEXT || type == Ex2Utils.NUMBER) {
-            return 0; // text or numbers dont have dependencies
+            return 0; // טקסט או מספרים אין להם תלות
         }
-        // נוסחה: ערך ברירת מחדל עד שחישוב תלות יבוצע
-        return order;
+        return order; // החזרת סדר החישוב במקרים אחרים
     }
 
-    //@Override
     @Override
     public String toString() {
         return getData();
@@ -29,18 +23,25 @@ public class SCell implements Cell {
     @Override
     public void setData(String s) {
         line = s;
+
+        // Check if the string is empty or null, or if it's a valid text value
         if (s == null || s.isEmpty()) {
+            type = Ex2Utils.TEXT;  // Empty, null, or regular text string is treated as TEXT
+        } else if (Ex2.isText(s)) {
             type = Ex2Utils.TEXT;
-            return;
-        }
-        if (Ex2.isForm(s)) {
-            type = Ex2Utils.FORM;
         } else if (Ex2.isNumber(s)) {
-            type = Ex2Utils.NUMBER;
+            type = Ex2Utils.NUMBER;  // If it's a number, set type to NUMBER
+        } else if (Ex2.isForm(s)) {
+            // If it's a valid formula, set type to FORM
+            type = Ex2Utils.FORM;
         } else {
-            type = Ex2Utils.TEXT;
+            // If it's not a valid formula, number, or text, it is treated as an invalid formula
+            type = Ex2Utils.ERR_FORM_FORMAT;  // Invalid formula format, so it gets the error type
         }
     }
+
+
+
 
     @Override
     public String getData() {
@@ -59,6 +60,6 @@ public class SCell implements Cell {
 
     @Override
     public void setOrder(int t) {
-    this.order = t;
+        this.order = t;
     }
-}
+    }
