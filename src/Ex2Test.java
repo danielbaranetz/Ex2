@@ -31,6 +31,7 @@ public class Ex2Test {
     public static void testIsForm() {
         System.out.println("Testing isForm...");
         assert Ex2.isForm("=1+2") : "Failed on =1+2";
+        assert Ex2.isForm("=5+5*(5+5)") : "Failed on this";
         assert Ex2.isForm("=(1+2)*3") : "Failed on =(1+2)*3";
         assert Ex2.isForm("=(A1+B2)") : "Failed on =(A1+B2)";
         assert !Ex2.isForm("123") : "Failed on 123";

@@ -16,54 +16,42 @@ public class Ex2 {
     }
 
     public static boolean isForm(String text) {
-        if (text == null || !text.startsWith("=")) {
-            return false; // It must start with '='
+        if (text == null || text.isEmpty() || text.charAt(0) != '=') {
+            return false;
         }
 
-        String formula = text.substring(1); // Remove the '=' at the start
-        boolean lastWasOperator = false; // Track if the last character was an operator
-
-        for (int i = 0; i < formula.length(); i++) {
-            char currentChar = formula.charAt(i);
-
-            // Check if the character is an operator
-            if (isOperator(currentChar)) {
-                // Invalid if an operator is the first character or if two operators are adjacent
-                if (i == 0 || lastWasOperator) {
-                    return false;
-                }
-                lastWasOperator = true; // Mark that the last character was an operator
-            } else {
-                lastWasOperator = false; // Mark that the last character was not an operator
-            }
-
-            // Check if it's a valid number or letter (for cell reference)
-            if (Character.isDigit(currentChar) || Character.isLetter(currentChar)) {
-                continue; // Valid number or letter, move on to the next character
-            }
-
-            // Check for cell reference (e.g., A1, B5, etc.)
-            if (Character.isLetter(currentChar)) {
-                int j = i + 1;
-                // Ensure the letter is followed by one or more digits
-                while (j < formula.length() && Character.isDigit(formula.charAt(j))) {
-                    j++;
-                }
-                if (j == i + 1) { // Cell must have a number after the letter
-                    return false;
-                }
-                i = j - 1; // Skip over the digits of the cell reference
-                continue;
-            }
-
-            // Reject invalid characters like `%`, or unsupported characters
-            if (!isOperator(currentChar) && !Character.isDigit(currentChar) && !Character.isLetter(currentChar)) {
-                return false;
-            }
-        }
-
-        return true;
+        // Remove the '=' and validate the expression
+        return isValidExpression(text.substring(1));
     }
+
+    private static boolean isValidExpression(String expression) {
+        // Base case: empty expression is invalid
+        if (expression.isEmpty()) return false;
+
+        int balance = 0; // To track parentheses balance
+        boolean lastWasOperator = true; // Track last character to ensure valid sequences
+
+        for (char c : expression.toCharArray()) {
+            if (Character.isDigit(c)) {
+                lastWasOperator = false; // Digit found, not an operator
+            } else if (c == '(') {
+                balance++;
+                lastWasOperator = true;
+            } else if (c == ')') {
+                balance--;
+                if (balance < 0) return false; // Unbalanced parentheses
+                lastWasOperator = false;
+            } else if ("+-*/".indexOf(c) >= 0) {
+                if (lastWasOperator) return false; // Two operators in a row
+                lastWasOperator = true;
+            } else {
+                return false; // Invalid character
+            }
+        }
+
+        return balance == 0 && !lastWasOperator; // Parentheses must be balanced, end not on operator
+    }
+
 
 
     public static boolean isOperator(char c) {

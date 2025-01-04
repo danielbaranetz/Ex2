@@ -10,9 +10,9 @@ public class SCell implements Cell {
     @Override
     public int getOrder() {
         if (type == Ex2Utils.TEXT || type == Ex2Utils.NUMBER) {
-            return 0; // טקסט או מספרים אין להם תלות
+            return 0;
         }
-        return order; // החזרת סדר החישוב במקרים אחרים
+        return order;
     }
 
     @Override
@@ -37,7 +37,7 @@ public class SCell implements Cell {
             type = Ex2Utils.FORM;
         } else {
             line = Ex2Utils.ERR_FORM;
-            type = Ex2Utils.ERR_FORM_FORMAT;  // Invalid formula format, so it gets the error type
+            type = Ex2Utils.ERR_FORM_FORMAT;
         }
     }
 
