@@ -31,13 +31,9 @@ public class SCell implements Cell {
             type = Ex2Utils.TEXT;
         } else if (Ex2.isNumber(s)) {
             type = Ex2Utils.NUMBER;  // If it's a number, set type to NUMBER
-//            line = Double.valueOf(s).toString();
         } else if (Ex2.isForm(s)) {
-//            line = Ex2.computeForm(s).toString();
-            // If it's a valid formula, set type to FORM
             type = Ex2Utils.FORM;
         } else {
-//            line = Ex2Utils.ERR_FORM;
             type = Ex2Utils.ERR_FORM_FORMAT;
         }
     }
