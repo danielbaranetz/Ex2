@@ -3,18 +3,19 @@ import java.io.IOException;
 
 public class Ex2Sheet implements Sheet {
     private Cell[][] table;
-            // Add your code here
 
+    // Add your code here
     // ///////////////////
     public Ex2Sheet(int x, int y) {
         table = new SCell[x][y];
-        for(int i=0;i<x;i=i+1) {
-            for(int j=0;j<y;j=j+1) {
+        for (int i = 0; i < x; i = i + 1) {
+            for (int j = 0; j < y; j = j + 1) {
                 table[i][j] = new SCell("");
             }
         }
         eval();
     }
+
     public Ex2Sheet() {
         this(Ex2Utils.WIDTH, Ex2Utils.HEIGHT);
     }
@@ -22,14 +23,22 @@ public class Ex2Sheet implements Sheet {
     @Override
     public String value(int x, int y) {
         String ans = Ex2Utils.EMPTY_CELL;
-        // Add your code here
-
-        Cell c = get(x,y);
-        if(c!=null) {ans = c.toString();}
-
-        /////////////////////
+        if (isIn(x, y)) {
+            Cell c = get(x, y);
+            if (c.getData() == null || c.getData().isEmpty()) {
+            } else if (Ex2.isText(c.getData())) {
+                ans = c.getData();
+            } else if (Ex2.isNumber(c.getData())) {
+                ans = Double.valueOf(c.getData()).toString();;  // If it's a number, set type to NUMBER
+            } else if (Ex2.isForm(c.getData())) {
+                ans = Ex2.computeForm(c.getData()).toString();
+            } else {
+                ans =Ex2Utils.ERR_FORM;
+            }
+        }
         return ans;
     }
+
 
     @Override
     public Cell get(int x, int y) {
@@ -40,8 +49,7 @@ public class Ex2Sheet implements Sheet {
     public Cell get(String cords) {
         Cell ans = null;
         // Add your code here
-
-        /////////////////////
+        ////////////////////
         return ans;
     }
 
@@ -49,10 +57,12 @@ public class Ex2Sheet implements Sheet {
     public int width() {
         return table.length;
     }
+
     @Override
     public int height() {
         return table[0].length;
     }
+
     @Override
     public void set(int x, int y, String s) {
         Cell c = new SCell(s);
@@ -61,6 +71,7 @@ public class Ex2Sheet implements Sheet {
 
         /////////////////////
     }
+
     @Override
     public void eval() {
         int[][] dd = depth();
@@ -71,7 +82,7 @@ public class Ex2Sheet implements Sheet {
 
     @Override
     public boolean isIn(int xx, int yy) {
-        boolean ans = xx>=0 && yy>=0;
+        boolean ans = xx >= 0 && yy >= 0;
         // Add your code here
 
         /////////////////////
@@ -104,10 +115,12 @@ public class Ex2Sheet implements Sheet {
     @Override
     public String eval(int x, int y) {
         String ans = null;
-        if(get(x,y)!=null) {ans = get(x,y).toString();}
+        if (get(x, y) != null) {
+            ans = get(x, y).toString();
+        }
         // Add your code here
 
         /////////////////////
         return ans;
-        }
+    }
 }
