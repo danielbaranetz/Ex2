@@ -51,10 +51,10 @@ public interface Sheet {
     public Cell get(int x, int y);
     /**
      * Return the cell @ the coordinate (entry). E.g., the String "B3" will be translated to [1][3].
-     * @param entry
+     * @param cords
      * @return the cell at the X.Y coordinate, or null if cords is an illegal coordinate or is out of this SprayedSheet.
      */
-    public Cell get(String entry); // G12
+    public Cell get(String cords); // G12
 
     /**
      *

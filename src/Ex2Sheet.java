@@ -1,126 +1,230 @@
-import java.io.IOException;
-// Add your documentation below:
+import java.io.*;
+import java.util.*;
 
 public class Ex2Sheet implements Sheet {
-    private Cell[][] table;
+    private final Cell[][] table;
+    private final int width;
+    private final int height;
 
-    // Add your code here
-    // ///////////////////
-    public Ex2Sheet(int x, int y) {
-        table = new SCell[x][y];
-        for (int i = 0; i < x; i = i + 1) {
-            for (int j = 0; j < y; j = j + 1) {
-                table[i][j] = new SCell("");
-            }
-        }
-        eval();
+    public Ex2Sheet(int width, int height) {
+        this.width = width;
+        this.height = height;
+        this.table = new Cell[width][height];
+        initializeCells();
     }
 
     public Ex2Sheet() {
         this(Ex2Utils.WIDTH, Ex2Utils.HEIGHT);
     }
 
-    @Override
-    public String value(int x, int y) {
-        String ans = Ex2Utils.EMPTY_CELL;
-        if (isIn(x, y)) {
-            Cell c = get(x, y);
-            if (c.getData() == null || c.getData().isEmpty()) {
-            } else if (Ex2.isText(c.getData())) {
-                ans = c.getData();
-            } else if (Ex2.isNumber(c.getData())) {
-                ans = Double.valueOf(c.getData()).toString();;  // If it's a number, set type to NUMBER
-            } else if (Ex2.isForm(c.getData())) {
-                ans = Ex2.computeForm(c.getData()).toString();
-            } else {
-                ans =Ex2Utils.ERR_FORM;
+    private void initializeCells() {
+        for (int col = 0; col < width; col++) {
+            for (int row = 0; row < height; row++) {
+                table[col][row] = new SCell(Ex2Utils.EMPTY_CELL);
             }
         }
-        return ans;
-    }
-
-
-    @Override
-    public Cell get(int x, int y) {
-        return table[x][y];
     }
 
     @Override
-    public Cell get(String cords) {
-        Cell ans = null;
-        // Add your code here
-        ////////////////////
-        return ans;
+    public boolean isIn(int x, int y) {
+        return x >= 0 && x < width && y >= 0 && y < height;
     }
 
     @Override
     public int width() {
-        return table.length;
+        return width;
     }
 
     @Override
     public int height() {
-        return table[0].length;
+        return height;
     }
 
     @Override
-    public void set(int x, int y, String s) {
-        Cell c = new SCell(s);
-        table[x][y] = c;
-        // Add your code here
+    public void set(int x, int y, String value) {
+        if (!isIn(x, y)) {
+            throw new IllegalArgumentException("Invalid cell coordinates");
+        }
+        System.out.println("cell " + convertCoordinatesToCellName(x, y) + " is: " + value);
+        table[x][y] = new SCell(value);
+        eval();
+    }
 
-        /////////////////////
+    @Override
+    public Cell get(int x, int y) {
+        return isIn(x, y) ? table[x][y] : null;
+    }
+
+    @Override
+    public Cell get(String cellReference) {
+        int[] coordinates = parseCoordinates(cellReference);
+        return get(coordinates[0], coordinates[1]);
+    }
+
+    @Override
+    public String value(int x, int y) {
+        Cell cell = get(x, y);
+        return (cell == null) ? Ex2Utils.EMPTY_CELL : eval(x, y);
+    }
+
+    private final Set<String> evaluatingCells = new HashSet<>();
+
+    @Override
+    public String eval(int x, int y) {
+        String cellName = convertCoordinatesToCellName(x, y);
+
+        if (evaluatingCells.contains(cellName)) {
+            handleCycle(x, y, cellName);
+            return Ex2Utils.ERR_CYCLE;
+        }
+
+        evaluatingCells.add(cellName);
+        Cell cell = get(x, y);
+
+        if (cell == null || cell.getData().isEmpty()) {
+            evaluatingCells.remove(cellName);
+            return Ex2Utils.EMPTY_CELL;
+        }
+
+        if (cell.getType() == Ex2Utils.FORM) {
+            return evaluateFormula(x, y, cellName, cell);
+        }
+
+        evaluatingCells.remove(cellName);
+        return cell.getData();
+    }
+
+    private void handleCycle(int x, int y, String cellName) {
+        System.out.println("Cycle detected in cell: " + cellName);
+        Cell cell = get(x, y);
+        if (cell != null) {
+            cell.setType(Ex2Utils.ERR_CYCLE_FORM);
+            cell.setData(Ex2Utils.ERR_CYCLE);
+        }
+    }
+
+    private String evaluateFormula(int x, int y, String cellName, Cell cell) {
+        try {
+            String formula = cell.getData().substring(1).trim();
+            double result = Ex2.computeForm(cell.getData(), this);
+            evaluatingCells.remove(cellName);
+            return Double.toString(result);
+        } catch (IllegalArgumentException e) {
+            handleInvalidFormula(cell, cellName);
+            return Ex2Utils.ERR_FORM;
+        }
+    }
+
+    private void handleInvalidFormula(Cell cell, String cellName) {
+        System.out.println("Invalid formula in cell " + cellName);
+        cell.setType(Ex2Utils.ERR_FORM_FORMAT);
+        cell.setData(Ex2Utils.ERR_FORM);
+        evaluatingCells.remove(cellName);
     }
 
     @Override
     public void eval() {
-        int[][] dd = depth();
-        // Add your code here
-
-        // ///////////////////
-    }
-
-    @Override
-    public boolean isIn(int xx, int yy) {
-        boolean ans = xx >= 0 && yy >= 0;
-        // Add your code here
-
-        /////////////////////
-        return ans;
+        for (int col = 0; col < width; col++) {
+            for (int row = 0; row < height; row++) {
+                eval(col, row);
+            }
+        }
     }
 
     @Override
     public int[][] depth() {
-        int[][] ans = new int[width()][height()];
-        // Add your code here
-
-        // ///////////////////
-        return ans;
+        int[][] depths = new int[width][height];
+        for (int col = 0; col < width; col++) {
+            for (int row = 0; row < height; row++) {
+                depths[col][row] = computeDepth(col, row, new HashSet<>());
+            }
+        }
+        return depths;
     }
 
-    @Override
-    public void load(String fileName) throws IOException {
-        // Add your code here
+    private int computeDepth(int x, int y, Set<String> visited) {
+        if (!isIn(x, y)) return 0;
 
-        /////////////////////
+        Cell cell = get(x, y);
+        if (cell == null || cell.getType() != Ex2Utils.FORM) return 0;
+
+        String cellKey = x + "," + y;
+        if (visited.contains(cellKey)) return -1;
+
+        visited.add(cellKey);
+        int maxDepth = calculateMaxDepth(cell, visited);
+        visited.remove(cellKey);
+
+        return maxDepth + 1;
+    }
+
+    private int calculateMaxDepth(Cell cell, Set<String> visited) {
+        String formula = cell.getData().substring(1);
+        int maxDepth = 0;
+
+        for (String ref : formula.split("[^A-Za-z0-9]+")) {
+            if (ref.matches("[A-Z][0-9]+")) {
+                int[] coords = parseCoordinates(ref);
+                int depth = computeDepth(coords[0], coords[1], visited);
+                if (depth == -1) return -1;
+                maxDepth = Math.max(maxDepth, depth);
+            }
+        }
+        return maxDepth;
     }
 
     @Override
     public void save(String fileName) throws IOException {
-        // Add your code here
-
-        /////////////////////
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            writer.write("I2CS ArielU: SpreadSheet (Ex2) assignment - this line should be ignored\n");
+            for (int col = 0; col < width; col++) {
+                for (int row = 0; row < height; row++) {
+                    Cell cell = table[col][row];
+                    if (cell != null && !cell.getData().trim().isEmpty()) {
+                        writer.write(col + "," + row + "," + cell.getData() + "\n");
+                    }
+                }
+            }
+        }
     }
 
     @Override
-    public String eval(int x, int y) {
-        String ans = null;
-        if (get(x, y) != null) {
-            ans = get(x, y).toString();
+    public void load(String fileName) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            reader.readLine();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",", 3);
+                if (parts.length >= 3) {
+                    try {
+                        set(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), parts[2]);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
         }
-        // Add your code here
+        eval();
+    }
 
-        /////////////////////
-        return ans;
+    public int[] parseCoordinates(String cellRef) {
+        if (cellRef == null || cellRef.trim().isEmpty()) {
+            throw new IllegalArgumentException("Cell reference cannot be null or empty.");
+        }
+
+        char col = cellRef.charAt(0);
+        if (col < 'A' || col > 'Z') {
+            throw new IllegalArgumentException("Invalid column in cell reference: " + cellRef);
+        }
+
+        try {
+            int row = Integer.parseInt(cellRef.substring(1));
+            return new int[]{col - 'A', row};
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid row in cell reference: " + cellRef);
+        }
+    }
+
+    public static String convertCoordinatesToCellName(int x, int y) {
+        return (char) ('A' + x) + Integer.toString(y);
     }
 }

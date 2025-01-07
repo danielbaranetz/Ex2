@@ -1,134 +1,232 @@
+import java.util.*;
+
 public class Ex2 {
-    static boolean isNumber(String s) {
+
+    public Ex2() {}
+
+    // Check if input string can be parsed as a number
+    public static boolean isNumber(String input) {
+        if (input == null || input.trim().isEmpty()) {
+            return false;
+        }
+
         try {
-            if (s.matches("\\d+")) {
-                Double.parseDouble(s);
-                return true;
-            }
+            Double.parseDouble(input);
+            return true;
         } catch (NumberFormatException e) {
             return false;
         }
-        return false;
     }
 
-    static boolean isText(String s) {
-        return !isNumber(s) && !isForm(s) && !s.startsWith("=");
-    }
-
-    public static boolean isForm(String text) {
-        if (text == null || text.isEmpty() || text.charAt(0) != '=') {
+    // Validate if input is text according to specified rules
+    public static boolean isText(String input) {
+        if (input == null || input.trim().isEmpty()) {
             return false;
         }
 
-        // Remove the '=' and validate the expression
-        return isValidExpression(text.substring(1));
+        // Check for consecutive operators
+        if (input.matches(".*([+\\-*/]{2,}).*")) {
+            return false;
+        }
+
+        // Check for valid number expression
+        if (input.matches("[0-9.]+([+\\-*/][0-9.]+)*")) {
+            return true;
+        }
+
+        // Check for alphanumeric text
+        return input.matches("[A-Za-z0-9]+") && !isNumber(input) && !isText(input);
     }
 
-    private static boolean isValidExpression(String expression) {
-        // Base case: empty expression is invalid
-        if (expression.isEmpty()) return false;
+    // Validate formula format
+    public static boolean isForm(String input) {
+        if (input == null || !input.startsWith("=")) {
+            return false;
+        }
 
-        int balance = 0; // To track parentheses balance
-        boolean lastWasOperator = true; // Track last character to ensure valid sequences
+        String formula = input.substring(1).trim();
+        return !formula.isEmpty() &&
+                areParenthesesBalanced(formula) &&
+                !formula.matches(".*([+\\-*/]{2,}).*");
+    }
 
-        for (char c : expression.toCharArray()) {
-            if (Character.isDigit(c)) {
-                lastWasOperator = false; // Digit found, not an operator
-            } else if (c == '(') {
-                balance++;
-                lastWasOperator = true;
-            } else if (c == ')') {
-                balance--;
-                if (balance < 0) return false; // Unbalanced parentheses
-                lastWasOperator = false;
-            } else if ("+-*/".indexOf(c) >= 0) {
-                if (lastWasOperator) return false; // Two operators in a row
-                lastWasOperator = true;
+    // Compute formula value using sheet data
+    public static double computeForm(String form, Ex2Sheet sheet) {
+        if (form == null || !form.startsWith("=")) {
+            throw new IllegalArgumentException("Invalid formula: " + form);
+        }
+
+        try {
+            String formula = form.substring(1).trim();
+            String replacedFormula = replaceCellReferences(formula, sheet);
+            return evalFormula(replacedFormula);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error computing formula: " + form);
+        }
+    }
+
+    // Replace cell references with their values
+    public static String replaceCellReferences(String formula, Ex2Sheet sheet) {
+        StringBuilder result = new StringBuilder();
+        int index = 0;
+
+        while (index < formula.length()) {
+            char currentChar = formula.charAt(index);
+
+            if (Character.isLetter(currentChar)) {
+                int endIndex = index;
+                while (endIndex < formula.length() &&
+                        Character.isLetterOrDigit(formula.charAt(endIndex))) {
+                    endIndex++;
+                }
+
+                String cellRef = formula.substring(index, endIndex).toUpperCase();
+                int[] coords = sheet.parseCoordinates(cellRef);
+                String cellValue = sheet.eval(coords[0], coords[1]);
+
+                if (cellValue == null || cellValue.trim().isEmpty()) {
+                    throw new IllegalArgumentException(
+                            "Formula contains a reference to an empty cell: " + cellRef);
+                }
+
+                result.append(cellValue);
+                index = endIndex;
             } else {
-                return false; // Invalid character
+                result.append(currentChar);
+                index++;
             }
         }
 
-        return balance == 0 && !lastWasOperator; // Parentheses must be balanced, end not on operator
+        return result.toString();
     }
 
+    // Check if parentheses are properly balanced
+    private static boolean areParenthesesBalanced(String formula) {
+        int count = 0;
 
+        for (char c : formula.toCharArray()) {
+            if (c == '(') count++;
+            else if (c == ')') count--;
 
-    public static boolean isOperator(char c) {
-        return (c == '+' || c == '-' || c == '*' || c == '/');
-    }
-
-    public static Double computeForm(String text) {
-        if (text == null || !text.startsWith("=")) {
-            throw new IllegalArgumentException("Invalid formula: " + text);
+            if (count < 0) return false;
         }
 
-        String formula = text.substring(1);
-
-        return evaluateExpression(formula);
+        return count == 0;
     }
 
-    private static Double evaluateExpression(String expression) {
-        expression = expression.replaceAll(" ", ""); // הסרת רווחים מיותרים
-        int openIndex = expression.lastIndexOf('(');
-        if (openIndex != -1) {
-            int closeIndex = expression.indexOf(')', openIndex);
-            if (closeIndex == -1) {
-                throw new IllegalArgumentException("Mismatched parentheses in formula: " + expression);
-            }
-
-            String innerExpression = expression.substring(openIndex + 1, closeIndex);
-            double innerResult = evaluateExpression(innerExpression);
-            expression = expression.substring(0, openIndex) + innerResult + expression.substring(closeIndex + 1);
-            return evaluateExpression(expression);
+    // Evaluate formula and return result
+    public static double evalFormula(String formula) {
+        try {
+            List<String> tokens = tokenizeFormula(formula.trim());
+            return evaluateTokens(tokens);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid formula: " + formula);
         }
+    }
 
-        for (int i = 0; i < expression.length(); i++) {
-            char c = expression.charAt(i);
-            if (c == '*' || c == '/') {
-                int leftIndex = findLeftOperand(expression, i);
-                int rightIndex = findRightOperand(expression, i);
+    // Convert formula string to tokens
+    private static List<String> tokenizeFormula(String formula) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder numberBuffer = new StringBuilder();
 
-                double leftOperand = Double.parseDouble(expression.substring(leftIndex, i));
-                double rightOperand = Double.parseDouble(expression.substring(i + 1, rightIndex + 1));
-                double result = (c == '*') ? leftOperand * rightOperand : leftOperand / rightOperand;
-
-                expression = expression.substring(0, leftIndex) + result + expression.substring(rightIndex + 1);
-                return evaluateExpression(expression);
+        for (char c : formula.toCharArray()) {
+            if (Character.isDigit(c) || c == '.') {
+                numberBuffer.append(c);
+            } else {
+                if (numberBuffer.length() > 0) {
+                    tokens.add(numberBuffer.toString());
+                    numberBuffer.setLength(0);
+                }
+                if (!Character.isWhitespace(c)) {
+                    tokens.add(String.valueOf(c));
+                }
             }
         }
 
-        for (int i = 0; i < expression.length(); i++) {
-            char c = expression.charAt(i);
-            if (c == '+' || c == '-') {
-                int leftIndex = findLeftOperand(expression, i);
-                int rightIndex = findRightOperand(expression, i);
+        if (numberBuffer.length() > 0) {
+            tokens.add(numberBuffer.toString());
+        }
 
-                double leftOperand = Double.parseDouble(expression.substring(leftIndex, i));
-                double rightOperand = Double.parseDouble(expression.substring(i + 1, rightIndex + 1));
-                double result = (c == '+') ? leftOperand + rightOperand : leftOperand - rightOperand;
+        return tokens;
+    }
 
-                expression = expression.substring(0, leftIndex) + result + expression.substring(rightIndex + 1);
-                return evaluateExpression(expression);
+    // Evaluate tokenized formula
+    private static double evaluateTokens(List<String> tokens) {
+        Stack<Double> numbers = new Stack<>();
+        Stack<Character> operators = new Stack<>();
+
+        for (String token : tokens) {
+            if (isNumber(token)) {
+                numbers.push(Double.parseDouble(token));
+            } else if (token.equals("(")) {
+                operators.push('(');
+            } else if (token.equals(")")) {
+                while (!operators.isEmpty() && operators.peek() != '(') {
+                    processTopOperator(numbers, operators);
+                }
+                if (operators.isEmpty() || operators.peek() != '(') {
+                    throw new IllegalArgumentException("Mismatched parentheses in formula.");
+                }
+                operators.pop();
+            } else if (isOperator(token.charAt(0))) {
+                while (!operators.isEmpty() &&
+                        precedence(operators.peek()) >= precedence(token.charAt(0))) {
+                    processTopOperator(numbers, operators);
+                }
+                operators.push(token.charAt(0));
             }
         }
 
-        return Double.parseDouble(expression);
+        while (!operators.isEmpty()) {
+            processTopOperator(numbers, operators);
+        }
+
+        if (numbers.size() != 1) {
+            throw new IllegalArgumentException("Invalid formula structure.");
+        }
+
+        return numbers.pop();
     }
 
-    private static int findLeftOperand(String expression, int index) {
-        int i = index - 1;
-        while (i >= 0 && (Character.isDigit(expression.charAt(i)) || expression.charAt(i) == '.')) {
-            i--;
-        }
-        return i + 1;
+    // Check if character is a valid operator
+    private static boolean isOperator(char c) {
+        return c == '+' || c == '-' || c == '*' || c == '/';
     }
 
-    private static int findRightOperand(String expression, int index) {
-        int i = index + 1;
-        while (i < expression.length() && (Character.isDigit(expression.charAt(i)) || expression.charAt(i) == '.')) {
-            i++;
+    // Get operator precedence
+    private static int precedence(char operator) {
+        return switch (operator) {
+            case '*', '/' -> 2;
+            case '+', '-' -> 1;
+            default -> -1;
+        };
+    }
+
+    // Process operator from stack
+    private static void processTopOperator(Stack<Double> numbers, Stack<Character> operators) {
+        if (numbers.size() < 2) {
+            throw new IllegalArgumentException("Invalid formula: missing operands.");
         }
-        return i - 1;
+
+        double b = numbers.pop();
+        double a = numbers.pop();
+        char op = operators.pop();
+        numbers.push(applyOperator(op, a, b));
+    }
+
+    // Apply operator to operands
+    private static double applyOperator(char operator, double left, double right) {
+        return switch (operator) {
+            case '+' -> left + right;
+            case '-' -> left - right;
+            case '*' -> left * right;
+            case '/' -> {
+                if (right == 0.0) {
+                    throw new ArithmeticException("Division by zero is not allowed");
+                }
+                yield left / right;
+            }
+            default -> throw new IllegalArgumentException("Unknown operator: " + operator);
+        };
     }
 }

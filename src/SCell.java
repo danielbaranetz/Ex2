@@ -1,17 +1,19 @@
+/**
+ * Represents a single cell in the spreadsheet.
+ * Each cell can contain a string, a number, or a formula.
+ */
 public class SCell implements Cell {
-    private String line;
-    private int type;
-    private int order;
+    private String line; // The content of the cell
+    private int type; // The type of the cell (TEXT, NUMBER, FORM, etc.)
+    private int order; // The evaluation order of the cell
 
     public SCell(String s) {
         setData(s);
+        setOrder(0); // Default order is 0
     }
 
     @Override
     public int getOrder() {
-        if (type == Ex2Utils.TEXT || type == Ex2Utils.NUMBER) {
-            return 0;
-        }
         return order;
     }
 
@@ -19,24 +21,26 @@ public class SCell implements Cell {
     public String toString() {
         return getData();
     }
-
     @Override
     public void setData(String s) {
         line = s;
 
-        // Check if the string is empty or null, or if it's a valid text value
-        if (s == null || s.isEmpty()) {
-            type = Ex2Utils.TEXT;  // Empty, null, or regular text string is treated as TEXT
-        } else if (Ex2.isText(s)) {
-            type = Ex2Utils.TEXT;
-        } else if (Ex2.isNumber(s)) {
-            type = Ex2Utils.NUMBER;  // If it's a number, set type to NUMBER
+        if (line == null || line.trim().isEmpty()) {
+            type = Ex2Utils.TEXT; // Empty cell is considered text
         } else if (Ex2.isForm(s)) {
-            type = Ex2Utils.FORM;
+            type = Ex2Utils.FORM; // Formula starts with '='
+        } else if (Ex2.isNumber(line)) {
+            type = Ex2Utils.NUMBER; // Cell contains a valid number
+            line = Double.valueOf(s).toString();
+        } else if (Ex2.isText(s)) {
+            type = Ex2Utils.TEXT; // Valid text
         } else {
-            type = Ex2Utils.ERR_FORM_FORMAT;
+            type = Ex2Utils.ERR_FORM_FORMAT; // Invalid format
+            line = Ex2Utils.ERR_FORM;
         }
     }
+
+
 
 
     @Override
@@ -56,6 +60,6 @@ public class SCell implements Cell {
 
     @Override
     public void setOrder(int t) {
-        this.order = t;
+        order = t;
     }
 }
