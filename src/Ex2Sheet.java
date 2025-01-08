@@ -80,7 +80,6 @@ public class Ex2Sheet implements Sheet {
         }
         evaluatingCells.add(cellName);
 
-
         if (cell == null || cell.getData().isEmpty()) {
             evaluatingCells.remove(cellName);
             return Ex2Utils.EMPTY_CELL;
@@ -92,8 +91,8 @@ public class Ex2Sheet implements Sheet {
                 evaluatingCells.remove(cellName);
                 return Double.toString(result);
             } catch (IllegalArgumentException e) {
-                System.out.println("aaaaaaaa");
                 handleInvalidFormula(cell, cellName);
+                cell.setData(Ex2Utils.ERR_FORM);
                 return Ex2Utils.ERR_FORM;
             }
         }
