@@ -21,6 +21,7 @@ public class SCell implements Cell {
     public String toString() {
         return getData();
     }
+
     @Override
     public void setData(String s) {
         line = s;
@@ -34,14 +35,11 @@ public class SCell implements Cell {
             line = Double.valueOf(s).toString();
         } else if (Ex2.isText(s)) {
             type = Ex2Utils.TEXT; // Valid text
-        }
-        else {
+        } else {
             type = Ex2Utils.ERR_FORM_FORMAT; // Invalid format
             line = Ex2Utils.ERR_FORM;
         }
     }
-
-
 
 
     @Override
