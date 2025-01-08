@@ -115,26 +115,35 @@ public class Ex2 {
         List<String> tokens = new ArrayList<>();
         StringBuilder numberBuffer = new StringBuilder();
 
-        for (char c : formula.toCharArray()) {
-            if (Character.isDigit(c) || c == '.') {
-                numberBuffer.append(c);
+        for (int i = 0; i < formula.length(); i++) {
+            char c = formula.charAt(i);
+
+            // Handle negative sign at the beginning or after an operator or opening parenthesis
+            if (c == '-' && (i == 0 || isOperator(formula.charAt(i - 1)) || formula.charAt(i - 1) == '(')) {
+                numberBuffer.append(c); // Treat the '-' as part of the number
+            } else if (Character.isDigit(c) || c == '.') {
+                numberBuffer.append(c); // Append digits and decimal points to the current number
             } else {
+                // When a complete number is found, add it to tokens
                 if (numberBuffer.length() > 0) {
                     tokens.add(numberBuffer.toString());
                     numberBuffer.setLength(0);
                 }
+                // Handle operators and parentheses
                 if (!Character.isWhitespace(c)) {
                     tokens.add(String.valueOf(c));
                 }
             }
         }
 
+        // If there's a number left in the buffer, add it as the last token
         if (numberBuffer.length() > 0) {
             tokens.add(numberBuffer.toString());
         }
 
         return tokens;
     }
+
 
     // Evaluate tokenized formula
     private static double evaluateTokens(List<String> tokens) {
