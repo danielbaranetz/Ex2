@@ -75,12 +75,11 @@ public class Ex2Sheet implements Sheet {
         String cellName = convertCoordinatesToCellName(x, y);
 
         if (evaluatingCells.contains(cellName)) {
-            handleCycle(x, y, cellName);
             cell.setType(Ex2Utils.ERR_CYCLE_FORM);
             return Ex2Utils.ERR_CYCLE;
         }
-
         evaluatingCells.add(cellName);
+
 
         if (cell == null || cell.getData().isEmpty()) {
             evaluatingCells.remove(cellName);
@@ -93,6 +92,7 @@ public class Ex2Sheet implements Sheet {
                 evaluatingCells.remove(cellName);
                 return Double.toString(result);
             } catch (IllegalArgumentException e) {
+                System.out.println("aaaaaaaa");
                 handleInvalidFormula(cell, cellName);
                 return Ex2Utils.ERR_FORM;
             }
@@ -101,14 +101,7 @@ public class Ex2Sheet implements Sheet {
         return cell.getData();
     }
 
-    private void handleCycle(int x, int y, String cellName) {
-        System.out.println("Cycle detected in cell: " + cellName);
-        Cell cell = get(x, y);
-        if (cell != null) {
-            cell.setType(Ex2Utils.ERR_CYCLE_FORM);
-            cell.setData(Ex2Utils.ERR_CYCLE);
-        }
-    }
+
 
     private void handleInvalidFormula(Cell cell, String cellName) {
         if (get(cellName) != cell) {
