@@ -105,7 +105,6 @@ public class Ex2Sheet implements Sheet {
 
     private String evaluateFormula(int x, int y, String cellName, Cell cell) {
         try {
-            String formula = cell.getData().substring(1).trim();
             double result = Ex2.computeForm(cell.getData(), this);
             evaluatingCells.remove(cellName);
             return Double.toString(result);
@@ -116,10 +115,12 @@ public class Ex2Sheet implements Sheet {
     }
 
     private void handleInvalidFormula(Cell cell, String cellName) {
-        System.out.println("Invalid formula in cell " + cellName);
-        cell.setType(Ex2Utils.ERR_FORM_FORMAT);
-        cell.setData(Ex2Utils.ERR_FORM);
-        evaluatingCells.remove(cellName);
+        if (get(cellName) != cell) {
+            System.out.println("Invalid formula in cell " + cellName);
+            cell.setType(Ex2Utils.ERR_FORM_FORMAT);
+            cell.setData(Ex2Utils.ERR_FORM);
+            evaluatingCells.remove(cellName);
+        }
     }
 
     @Override
