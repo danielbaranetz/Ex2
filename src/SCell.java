@@ -29,12 +29,13 @@ public class SCell implements Cell {
             type = Ex2Utils.TEXT; // Empty cell is considered text
         } else if (Ex2.isForm(s)) {
             type = Ex2Utils.FORM; // Formula starts with '='
-        } else if (Ex2.isNumber(line)) {
+        } else if (Ex2.isNumber(s)) {
             type = Ex2Utils.NUMBER; // Cell contains a valid number
             line = Double.valueOf(s).toString();
         } else if (Ex2.isText(s)) {
             type = Ex2Utils.TEXT; // Valid text
-        } else {
+        }
+        else {
             type = Ex2Utils.ERR_FORM_FORMAT; // Invalid format
             line = Ex2Utils.ERR_FORM;
         }

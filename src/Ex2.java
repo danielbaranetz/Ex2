@@ -19,24 +19,10 @@ public class Ex2 {
     }
 
     // Validate if input is text according to specified rules
-    public static boolean isText(String input) {
-        if (input == null || input.trim().isEmpty()) {
-            return false;
-        }
-
-        // Check for consecutive operators
-        if (input.matches(".*([+\\-*/]{2,}).*")) {
-            return false;
-        }
-
-        // Check for valid number expression
-        if (input.matches("[0-9.]+([+\\-*/][0-9.]+)*")) {
-            return true;
-        }
-
-        // Check for alphanumeric text
-        return input.matches("[A-Za-z0-9]+") && !isNumber(input) && !isText(input);
+    static boolean isText(String s) {
+        return !isNumber(s) && !isForm(s) && !s.startsWith("=");
     }
+
 
     // Validate formula format
     public static boolean isForm(String input) {

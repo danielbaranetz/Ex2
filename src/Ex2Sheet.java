@@ -71,15 +71,16 @@ public class Ex2Sheet implements Sheet {
 
     @Override
     public String eval(int x, int y) {
+        Cell cell = get(x, y);
         String cellName = convertCoordinatesToCellName(x, y);
 
         if (evaluatingCells.contains(cellName)) {
             handleCycle(x, y, cellName);
+            cell.setType(Ex2Utils.ERR_CYCLE_FORM);
             return Ex2Utils.ERR_CYCLE;
         }
 
         evaluatingCells.add(cellName);
-        Cell cell = get(x, y);
 
         if (cell == null || cell.getData().isEmpty()) {
             evaluatingCells.remove(cellName);
@@ -87,9 +88,15 @@ public class Ex2Sheet implements Sheet {
         }
 
         if (cell.getType() == Ex2Utils.FORM) {
-            return evaluateFormula(x, y, cellName, cell);
+            try {
+                double result = Ex2.computeForm(cell.getData(), this);
+                evaluatingCells.remove(cellName);
+                return Double.toString(result);
+            } catch (IllegalArgumentException e) {
+                handleInvalidFormula(cell, cellName);
+                return Ex2Utils.ERR_FORM;
+            }
         }
-
         evaluatingCells.remove(cellName);
         return cell.getData();
     }
@@ -100,17 +107,6 @@ public class Ex2Sheet implements Sheet {
         if (cell != null) {
             cell.setType(Ex2Utils.ERR_CYCLE_FORM);
             cell.setData(Ex2Utils.ERR_CYCLE);
-        }
-    }
-
-    private String evaluateFormula(int x, int y, String cellName, Cell cell) {
-        try {
-            double result = Ex2.computeForm(cell.getData(), this);
-            evaluatingCells.remove(cellName);
-            return Double.toString(result);
-        } catch (IllegalArgumentException e) {
-            handleInvalidFormula(cell, cellName);
-            return Ex2Utils.ERR_FORM;
         }
     }
 
