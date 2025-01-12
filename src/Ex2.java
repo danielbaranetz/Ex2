@@ -31,6 +31,7 @@ public class Ex2 {
         }
 
         String formula = input.substring(1).trim();
+        if (formula.contains("=")) { return false; }
         return !formula.isEmpty() &&
                 areParenthesesBalanced(formula) &&
                 !formula.matches(".*([+\\-*/]{2,}).*");
