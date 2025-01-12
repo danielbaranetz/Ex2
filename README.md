@@ -66,10 +66,15 @@ Ex2
 │   ├── Ex2Sheet.java       # Main spreadsheet implementation
 │   ├── Cell.java           # Cell interface definition
 │   ├── SCell.java          # Concrete cell implementation
-│   └── Ex2Utils.java       # Utility methods and constants
-├── test
-│   └── Ex2SheetTest.java   # Unit tests for Ex2Sheet
-└── README.md               # Project documentation
+│   ├── Sheet.java          # Ex2sheet interface definiton
+│   ├── Ex2.java            # Utility methods and calc methods
+│   ├── Index2D.java        # CellEntry interface definiton
+│   ├── stDrawEx2.java      # Spreadsheet gui functions
+│   ├── Ex2Utils.java       # Utility methods and final values
+│   ├── Ex2SheetTest.java   # Unit tests for Ex2 functions
+│   ├── Ex2GUI.java         # Gui functions
+│   └── CellEntry.java      # Concrete Sheet implementation
+└── README.md               # Project README
 ```
 
 ## 🛠️ Tools and Technologies
