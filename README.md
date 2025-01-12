@@ -50,6 +50,8 @@ Load the spreadsheet from a file:
 > load spreadsheet.txt
 ```
 
+![App Screenshot](Ex2_screenshot.PNG)
+
 ## 🔧 Methods and Functionalities
 ### Core Methods in `Ex2Sheet` Class:
 - **`set(int x, int y, String value)`**: Sets the value of a cell at coordinates `(x, y)`.
