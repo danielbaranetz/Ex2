@@ -210,18 +210,15 @@ public class Ex2 {
     }
 
     // Apply operator to operands
+// Apply operator to operands
     private static double applyOperator(char operator, double left, double right) {
         return switch (operator) {
             case '+' -> left + right;
             case '-' -> left - right;
             case '*' -> left * right;
-            case '/' -> {
-                if (right == 0.0) {
-                    throw new ArithmeticException("Division by zero is not allowed");
-                }
-                yield left / right;
-            }
+            case '/' -> left / right; // Direct division without checking for zero
             default -> throw new IllegalArgumentException("Unknown operator: " + operator);
         };
     }
+
 }

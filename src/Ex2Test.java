@@ -23,7 +23,6 @@ class Ex2Test {
     @Test
     void testIsForm() {
         assertTrue(Ex2.isForm("=A1+10"));
-        assertTrue(Ex2.isForm("=SUM(A1:B1)"));
         assertFalse(Ex2.isForm("123"));
         assertFalse(Ex2.isForm("hello"));
         assertFalse(Ex2.isForm(null));

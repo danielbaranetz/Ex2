@@ -87,9 +87,11 @@ public class Ex2Sheet implements Sheet {
         String cellName = convertCoordinatesToCellName(x, y);
 
         if (evaluatingCells.contains(cellName)) { // Detect cyclic dependencies.
-            cell.setType(Ex2Utils.ERR_CYCLE_FORM);
-            return Ex2Utils.ERR_CYCLE;
+            cell.setType(Ex2Utils.ERR_CYCLE_FORM); // Set type to cycle error.
+            return Ex2Utils.ERR_CYCLE; // Return the error text.
         }
+
+        // Add to the set of currently evaluating cells.
         evaluatingCells.add(cellName);
 
         if (cell == null || cell.getData().isEmpty()) { // Empty cell handling.
@@ -99,28 +101,32 @@ public class Ex2Sheet implements Sheet {
 
         if (cell.getType() == Ex2Utils.FORM) { // Formula evaluation.
             try {
-                double result = Ex2.computeForm(cell.getData(), this);
+                double result = Ex2.computeForm(cell.getData(), this); // Compute the formula.
                 evaluatingCells.remove(cellName);
-                return Double.toString(result);
-            } catch (IllegalArgumentException e) {
-                handleInvalidFormula(cell, cellName); // Handle invalid formulas.
-                cell.setData(Ex2Utils.ERR_FORM);
-                return Ex2Utils.ERR_FORM;
+                return Double.toString(result); // Return the computed result as a string.
+            } catch (IllegalArgumentException e) { // Catch formula errors.
+                cell.setType(Ex2Utils.ERR_FORM_FORMAT);
+                evaluatingCells.remove(cellName);
+                return Ex2Utils.ERR_FORM; // Return the error text.
             }
         }
+
+        if (cell.getType() == Ex2Utils.ERR_FORM_FORMAT) { // Invalid formula format.
+            evaluatingCells.remove(cellName);
+            return Ex2Utils.ERR_FORM; // Return the error text.
+        }
+
+        if (cell.getType() == Ex2Utils.ERR_CYCLE_FORM) { // Cycle error handling.
+            evaluatingCells.remove(cellName);
+            return Ex2Utils.ERR_CYCLE; // Return the cycle error text.
+        }
+
+        // For numbers or text, return the raw data.
         evaluatingCells.remove(cellName);
-        return cell.getData(); // Return raw data if not a formula.
+        return cell.getData();
     }
 
-    // Handles invalid formula errors and updates cell metadata.
-    private void handleInvalidFormula(Cell cell, String cellName) {
-        if (get(cellName) != cell) {
-            System.out.println("Invalid formula in cell " + cellName);
-            cell.setType(Ex2Utils.ERR_FORM_FORMAT);
-            cell.setData(Ex2Utils.ERR_FORM);
-            evaluatingCells.remove(cellName);
-        }
-    }
+
 
     // Reevaluates the entire sheet.
     @Override
@@ -146,36 +152,51 @@ public class Ex2Sheet implements Sheet {
 
     // Computes the depth of dependencies for a specific cell.
     private int computeDepth(int x, int y, Set<String> visited) {
-        if (!isIn(x, y)) return 0;
+        if (!isIn(x, y)) return 0; // Out-of-bounds cells have no depth
 
         Cell cell = get(x, y);
-        if (cell == null || cell.getType() != Ex2Utils.FORM) return 0;
+        if (cell == null || cell.getType() != Ex2Utils.FORM) return 0; // Non-formulas have no depth
 
         String cellKey = x + "," + y;
-        if (visited.contains(cellKey)) return -1; // Cycle detected.
+        if (visited.contains(cellKey)) {
+            cell.setType(Ex2Utils.ERR_CYCLE_FORM); // Mark as part of a cycle
+            return -1; // Indicate cycle
+        }
 
         visited.add(cellKey);
+
         int maxDepth = calculateMaxDepth(cell, visited);
+
         visited.remove(cellKey);
 
-        return maxDepth + 1;
+        if (maxDepth == -1) {
+            cell.setType(Ex2Utils.ERR_CYCLE_FORM); // Mark as part of a cycle
+        }
+
+        return maxDepth == -1 ? -1 : maxDepth + 1; // Propagate cycle detection
     }
+
 
     // Helper method to calculate the maximum depth of dependencies in a formula.
     private int calculateMaxDepth(Cell cell, Set<String> visited) {
-        String formula = cell.getData().substring(1); // Remove formula marker.
+        String formula = cell.getData().substring(1); // Remove '=' marker
         int maxDepth = 0;
 
-        for (String ref : formula.split("[^A-Za-z0-9]+")) { // Parse references in formula.
-            if (ref.matches("[A-Z][0-9]+")) { // Match valid cell references.
+        for (String ref : formula.split("[^A-Za-z0-9]+")) {
+            if (ref.matches("[A-Z][0-9]+")) { // Valid cell reference
                 int[] coords = parseCoordinates(ref);
                 int depth = computeDepth(coords[0], coords[1], visited);
-                if (depth == -1) return -1; // Cycle detected.
+                if (depth == -1) {
+                    cell.setType(Ex2Utils.ERR_CYCLE_FORM); // Mark this cell as part of a cycle
+                    return -1; // Propagate cycle detection
+                }
                 maxDepth = Math.max(maxDepth, depth);
             }
         }
         return maxDepth;
     }
+
+
 
     // Saves the current state of the sheet to a file.
     @Override

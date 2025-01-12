@@ -28,18 +28,19 @@ public class SCell implements Cell {
 
         if (line == null || line.trim().isEmpty()) {
             type = Ex2Utils.TEXT; // Empty cell is considered text
-        } else if (Ex2.isForm(s)) {
-            type = Ex2Utils.FORM; // Formula starts with '='
         } else if (Ex2.isNumber(s)) {
             type = Ex2Utils.NUMBER; // Cell contains a valid number
-            line = Double.valueOf(s).toString();
+            line = Double.valueOf(s).toString(); // Normalize number representation
         } else if (Ex2.isText(s)) {
             type = Ex2Utils.TEXT; // Valid text
+        } else if (Ex2.isForm(s)) {
+            type = Ex2Utils.FORM; // Valid formula starts with '='
         } else {
             type = Ex2Utils.ERR_FORM_FORMAT; // Invalid format
-            line = Ex2Utils.ERR_FORM;
         }
+        // ERR_CYCLE_FORM should only be set explicitly, not here.
     }
+
 
 
     @Override
@@ -54,8 +55,13 @@ public class SCell implements Cell {
 
     @Override
     public void setType(int t) {
+        // Prevent overwriting cycle errors unless explicitly set
+        if (type == Ex2Utils.ERR_CYCLE_FORM && t != Ex2Utils.ERR_CYCLE_FORM) {
+            return;
+        }
         type = t;
     }
+
 
     @Override
     public void setOrder(int t) {
