@@ -19,7 +19,7 @@
    ```
 2. Run the JAR file:
    ```bash
-   java -jar path/to/Ex2.jar
+   java -jar path/to/Ex2_sol.jar
    ```
 
 ### Option 2: Using IntelliJ IDEA
@@ -64,6 +64,7 @@ Load the spreadsheet from a file:
 Ex2
 ├── src
 │   ├── Ex2Sheet.java       # Main spreadsheet implementation
+│   ├── Ex2_sol.jar 
 │   ├── Cell.java           # Cell interface definition
 │   ├── SCell.java          # Concrete cell implementation
 │   ├── Sheet.java          # Ex2sheet interface definiton
