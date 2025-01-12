@@ -221,6 +221,10 @@ public class Ex2Sheet implements Sheet {
             reader.readLine(); // Ignore the header line.
             String line;
             while ((line = reader.readLine()) != null) {
+                line = line.replace(" ", ""); // Remove all spaces from the line.
+                if (line.isEmpty()) { // Skip empty lines.
+                    continue;
+                }
                 String[] parts = line.split(",", 3);
                 if (parts.length >= 3) {
                     try {
@@ -232,6 +236,8 @@ public class Ex2Sheet implements Sheet {
         }
         eval(); // Reevaluate after loading.
     }
+
+
 
     // Parses a cell reference (e.g., "A1") into coordinates.
     public int[] parseCoordinates(String cellRef) {
